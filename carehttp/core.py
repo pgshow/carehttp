@@ -1,4 +1,5 @@
 import requests
+import check_suffix
 from retrying import retry
 from loguru import logger
 
@@ -20,7 +21,7 @@ def _retry_if_err(exception, cls):
     else:
         obj = cls.url  # what object does it for
 
-    logger.error(f'{obj} {cls.method.upper()} attempt{cls.attempt} ERR: {exception}')
+    logger.error(f'{obj} {cls.fetch_type.upper()} attempt{cls.attempt} ERR: {exception}')
 
     # Let's say we will just retry if any kind of exception occurred
     return isinstance(exception, Exception)
@@ -49,9 +50,10 @@ class Carehttp:
         self.req = retry_decorator(self.req)
 
     def req(self, method, url, **kwargs):
-        self.method = method
         self.url = url
         self.attempt += 1  # requests attempt times
+
+        self._log_type(url, method)
 
         response = None
         try:
@@ -62,10 +64,18 @@ class Carehttp:
         finally:
             response and response.close()
 
+    def _log_type(self, url, method):
+        """Change fetch type"""
+        suffix_type = check_suffix.check_type(url)
+        if suffix_type:
+            self.fetch_type = suffix_type
+        else:
+            self.fetch_type = method
+
 
 if __name__ == '__main__':
     r = careget('https://media.architecturaldigest.com/photos/62816958c46d4bf6875e71ff/master/pass/Gardening%20mistakes%20to%20avoid.jpg',
-                mark='Display in the error',
+                mark='title',
                 timeout=0.1,
                 )
     print(r.text)
