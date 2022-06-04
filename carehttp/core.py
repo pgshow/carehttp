@@ -1,17 +1,8 @@
 import requests
 import check_suffix
+from requests.exceptions import *
 from retrying import retry
 from loguru import logger
-
-
-def careget(url, mark=None, params=None, **kwargs):
-    response = Carehttp(mark=mark).req('get', url, params=params, **kwargs)
-    return response
-
-
-def carepost(url, mark=None, data=None, json=None, **kwargs):
-    response = Carehttp(mark=mark).req('post', url, data=data, json=json, **kwargs)
-    return response
 
 
 def _retry_if_err(exception, cls):
@@ -23,8 +14,19 @@ def _retry_if_err(exception, cls):
 
     logger.error(f'{obj} {cls.fetch_type.upper()} attempt{cls.attempt} ERR: {exception}')
 
-    # Let's say we will just retry if any kind of exception occurred
-    return isinstance(exception, Exception)
+    # What kind of requests error we retry
+    err_types = [
+        HTTPError,
+        ConnectionError,
+        ProxyError,
+        SSLError,
+        Timeout,
+        ConnectTimeout,
+        ReadTimeout,
+    ]
+    for t in err_types:
+        if isinstance(exception, t):
+            return True
 
 
 class Carehttp:
@@ -47,9 +49,10 @@ class Carehttp:
             retry_on_exception=lambda exc: _retry_if_err(exc, self),
         )
 
-        self.req = retry_decorator(self.req)
+        self.get = retry_decorator(self.get)
+        self.post = retry_decorator(self.post)
 
-    def req(self, method, url, **kwargs):
+    def _req(self, method, url, **kwargs):
         self.url = url
         self.attempt += 1  # requests attempt times
 
@@ -64,6 +67,12 @@ class Carehttp:
         finally:
             response and response.close()
 
+    def get(self, url, params=None, **kwargs):
+        return self._req('get', url, params=params, **kwargs)
+
+    def post(self, url, data=None, json=None, **kwargs):
+        return self._req('post', url, data=data, json=json, **kwargs)
+
     def _log_type(self, url, method):
         """Change fetch type"""
         suffix_type = check_suffix.check_type(url)
@@ -74,8 +83,5 @@ class Carehttp:
 
 
 if __name__ == '__main__':
-    r = careget('https://media.architecturaldigest.com/photos/62816958c46d4bf6875e71ff/master/pass/Gardening%20mistakes%20to%20avoid.jpg',
-                mark='title',
-                timeout=0.1,
-                )
+    r = Carehttp(mark='title').get(url='https://media.architecturaldigest.com/photos/62816958c46d4bf6875e71ff/master/pass/Gardening%20mistakes%20to%20avoid.jpg', timeout=0.1)
     print(r.text)

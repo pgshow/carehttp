@@ -16,24 +16,25 @@ Usage
 -----
 example1 print the url:
 ```python
-from carehttp import *
+from carehttp import Carehttp
 
-r = careget('https://stackoverflow.com/', timeout=1)
+r = Carehttp().get(url='https://stackoverflow.com/', timeout=0.1)
 print(r.text)
 
-r = carepost('https://stackoverflow.com/', data={}, json={}, timeout=1)
+r = Carehttp().post('https://stackoverflow.com/', data={}, json={}, timeout=1)
 print(r.text)
 ```
 -----
 example2 print a title:
 ```python
-r = careget('https://stackoverflow.com/', mark='title', timeout=1)
+
+r = Carehttp(mark='title').get('https://stackoverflow.com/', timeout=1)
 print(r.text)
 ```
 -----
 example3 custom retry setting:
 ```python
-r = careget('https://stackoverflow.com/', mark='title', tries=10, delay=1, max_delay=60)
+r = Carehttp(mark='title', tries=10, delay=1, max_delay=60).get('https://stackoverflow.com/', timeout=1)
 print(r.text)
 ```
 
