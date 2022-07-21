@@ -1,5 +1,5 @@
 import requests
-import check_suffix
+from carehttp import check_suffix
 from requests.exceptions import *
 from retrying import retry
 from loguru import logger
