@@ -27,8 +27,8 @@ print(r.text)
 -----
 example2 print a title:
 ```python
-
-r = Carehttp(mark='title').get('https://stackoverflow.com/', timeout=1)
+s = requests.Session()
+r = Carehttp(session=s, mark='title').get('https://stackoverflow.com/', timeout=1)
 print(r.text)
 ```
 -----

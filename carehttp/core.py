@@ -30,7 +30,8 @@ def _retry_if_err(exception, cls):
 
 
 class Carehttp:
-    def __init__(self, mark=None, tries=5, delay=1, max_delay=30):
+    def __init__(self, session=None, mark=None, tries=5, delay=1, max_delay=30):
+        self.session = session
         self.mark = mark  # Could be title, target name, but not url
         self.attempt = 0
         self.method = None
@@ -60,7 +61,10 @@ class Carehttp:
 
         response = None
         try:
-            response = requests.request(method, url, **kwargs)
+            if self.session:
+                response = self.session.request(method, url, **kwargs)
+            else:
+                response = requests.request(method, url, **kwargs)
             return response
         except Exception as e:
             raise e
@@ -83,5 +87,6 @@ class Carehttp:
 
 
 if __name__ == '__main__':
-    r = Carehttp(mark='title').get(url='https://media.architecturaldigest.com/photos/62816958c46d4bf6875e71ff/master/pass/Gardening%20mistakes%20to%20avoid.jpg', timeout=0.1)
+    s = requests.Session()
+    r = Carehttp(session=s, mark='title').get(url='https://media.architecturaldigest.com/photos/62816958c46d4bf6875e71ff/master/pass/Gardening%20mistakes%20to%20avoid.jpg', timeout=0.1)
     print(r.text)
