@@ -1,5 +1,6 @@
 import requests
 from carehttp import check_suffix
+from carehttp.user_agents import get_user_agent
 from requests.exceptions import *
 from retrying import retry
 from loguru import logger
@@ -30,12 +31,13 @@ def _retry_if_err(exception, cls):
 
 
 class Carehttp:
-    def __init__(self, session=None, mark=None, tries=5, delay=1, max_delay=30):
+    def __init__(self, session=None, mark=None, tries=5, delay=1, max_delay=30, random_ua=False):
         self.session = session
         self.mark = mark  # Could be title, target name, but not url
         self.attempt = 0
         self.method = None
         self.url = None
+        self.random_ua = random_ua  # Whether to use random useragent
 
         # retry setting
         self.tries = tries
@@ -59,6 +61,8 @@ class Carehttp:
 
         self._log_type(url, method)
 
+        self.set_random_useragent(kwargs)
+
         response = None
         try:
             if self.session:
@@ -77,6 +81,17 @@ class Carehttp:
     def post(self, url, data=None, json=None, **kwargs):
         return self._req('post', url, data=data, json=json, **kwargs)
 
+    def set_random_useragent(self, kwargs_dict):
+        """Set useragent to headers"""
+        if self.random_ua:
+            if 'headers' in kwargs_dict:
+                if isinstance(kwargs_dict['headers'], dict):
+                    kwargs_dict['headers']['user-agent'] = get_user_agent()
+            else:
+                kwargs_dict['headers'] = {
+                    'user-agent': get_user_agent()
+                }
+
     def _log_type(self, url, method):
         """Change fetch type"""
         suffix_type = check_suffix.check_type(url)
@@ -87,6 +102,10 @@ class Carehttp:
 
 
 if __name__ == '__main__':
+    headers = {
+        'xxx': 'xxx'
+    }
     s = requests.Session()
-    r = Carehttp(session=s, mark='title').get(url='https://media.architecturaldigest.com/photos/62816958c46d4bf6875e71ff/master/pass/Gardening%20mistakes%20to%20avoid.jpg', timeout=0.1)
+    # r = Carehttp(session=s, mark='title').get(url='https://media.architecturaldigest.com/photos/62816958c46d4bf6875e71ff/master/pass/Gardening%20mistakes%20to%20avoid.jpg', timeout=0.1)
+    r = Carehttp(session=s, mark='title', random_ua=True).get(url='https://media.architecturaldigest.com/photos/62816958c46d4bf6875e71ff/master/pass/Gardening%20mistakes%20to%20avoid.jpg', headers=headers, timeout=2)
     print(r.text)
