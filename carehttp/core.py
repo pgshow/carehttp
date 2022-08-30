@@ -46,7 +46,7 @@ class Carehttp:
         retry_decorator = retry(
             stop_max_attempt_number=self.tries,  # retry times
             wait_exponential_multiplier=self.delay,
-            wait_exponential_max=self.max_delay,
+            wait_exponential_max=self.max_delay,  # Wait 2^x * 1000 milliseconds between each retry
             retry_on_exception=lambda exc: _retry_if_err(exc, self),
         )
 
