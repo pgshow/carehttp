@@ -31,7 +31,7 @@ def _retry_if_err(exception, cls):
 
 
 class Carehttp:
-    def __init__(self, session=None, mark=None, tries=5, delay=1, max_delay=30, random_ua=False):
+    def __init__(self, mark=None, session=None, tries=5, delay=1, max_delay=30, random_ua=False):
         self.session = session
         self.mark = mark  # Could be title, target name, but not url
         self.attempt = 0
